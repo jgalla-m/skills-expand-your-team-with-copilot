@@ -24,6 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const themeToggleButton = document.getElementById("theme-toggle-button");
+  const themeIcon = document.querySelector("#theme-toggle-button .theme-icon");
+  const themeLabel = document.querySelector("#theme-toggle-button .theme-label");
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -43,6 +46,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Authentication state
   let currentUser = null;
+  const themeStorageKey = "preferredTheme";
+
+  function applyTheme(theme) {
+    const isDarkMode = theme === "dark";
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    themeToggleButton.setAttribute("aria-pressed", String(isDarkMode));
+    themeIcon.textContent = isDarkMode ? "☀️" : "🌙";
+    themeLabel.textContent = isDarkMode ? "Light Mode" : "Dark Mode";
+  }
+
+  function initializeTheme() {
+    const savedTheme = localStorage.getItem(themeStorageKey) || "light";
+    applyTheme(savedTheme);
+  }
+
+  function toggleTheme() {
+    const nextTheme = document.body.classList.contains("dark-mode")
+      ? "light"
+      : "dark";
+    localStorage.setItem(themeStorageKey, nextTheme);
+    applyTheme(nextTheme);
+  }
 
   // Time range mappings for the dropdown
   const timeRanges = {
@@ -238,6 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loginButton.addEventListener("click", openLoginModal);
   logoutButton.addEventListener("click", logout);
   closeLoginModal.addEventListener("click", closeLoginModalHandler);
+  themeToggleButton.addEventListener("click", toggleTheme);
 
   // Close login modal when clicking outside
   window.addEventListener("click", (event) => {
@@ -862,6 +888,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize app
+  initializeTheme();
   checkAuthentication();
   initializeFilters();
   fetchActivities();
