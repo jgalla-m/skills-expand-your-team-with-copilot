@@ -309,7 +309,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const shareUrl = new URL(window.location.href);
     shareUrl.searchParams.set("activity", name);
     const activityUrl = shareUrl.toString();
-    const shareText = `Check out ${name} at Mergington High School! ${details.description}`;
+    const description =
+      typeof details.description === "string" ? details.description.trim() : "";
+    const shareText = description
+      ? `Check out ${name} at Mergington High School! ${description}`
+      : `Check out ${name} at Mergington High School!`;
 
     return {
       shareText,
@@ -395,8 +399,12 @@ document.addEventListener("DOMContentLoaded", () => {
     textarea.style.left = "-9999px";
     document.body.appendChild(textarea);
     textarea.select();
-    document.execCommand("copy");
+    console.info("Using legacy clipboard copy fallback.");
+    const copied = document.execCommand("copy");
     document.body.removeChild(textarea);
+    if (!copied) {
+      throw new Error("Legacy clipboard copy failed");
+    }
   }
 
   // Function to determine activity type (this would ideally come from backend)
