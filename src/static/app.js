@@ -399,7 +399,6 @@ document.addEventListener("DOMContentLoaded", () => {
     textarea.style.left = "-9999px";
     document.body.appendChild(textarea);
     textarea.select();
-    console.info("Using legacy clipboard copy fallback.");
     const copied = document.execCommand("copy");
     document.body.removeChild(textarea);
     if (!copied) {
