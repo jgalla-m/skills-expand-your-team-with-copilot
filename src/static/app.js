@@ -322,13 +322,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Create social sharing controls for an activity card
   function createShareButtons(name, details) {
-    const {
-      encodedText,
-      encodedUrl,
-      encodedWhatsappText,
-      activityUrl,
-      shareText,
-    } = buildShareContent(name, details);
+    const { encodedText, encodedUrl, encodedWhatsappText, activityUrl } =
+      buildShareContent(name, details);
     const supportsNativeShare = typeof navigator.share === "function";
 
     return `
@@ -343,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
               class="share-button share-native-button"
               aria-label="Share ${name}"
               data-share-text="${encodedText}"
-              data-share-url="${encodedUrl}"
+              data-share-url="${activityUrl}"
             >
               📤 Share
             </button>
@@ -381,8 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
             type="button"
             class="share-button share-copy-button"
             aria-label="Copy share link for ${name}"
-            data-share-url="${encodedUrl}"
-            data-share-text="${encodedText}"
+            data-share-url="${activityUrl}"
           >
             Copy Link
           </button>
@@ -698,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (nativeShareButton) {
       nativeShareButton.addEventListener("click", async () => {
         const shareText = decodeURIComponent(nativeShareButton.dataset.shareText);
-        const shareUrl = decodeURIComponent(nativeShareButton.dataset.shareUrl);
+        const shareUrl = nativeShareButton.dataset.shareUrl;
 
         try {
           await navigator.share({
@@ -718,7 +712,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (copyShareButton) {
       copyShareButton.addEventListener("click", async () => {
         try {
-          const shareUrl = decodeURIComponent(copyShareButton.dataset.shareUrl);
+          const shareUrl = copyShareButton.dataset.shareUrl;
           await copyToClipboard(shareUrl);
           showMessage("Share link copied to clipboard.", "success");
         } catch (error) {
