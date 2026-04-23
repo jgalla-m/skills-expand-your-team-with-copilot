@@ -306,9 +306,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Build social sharing metadata for an activity
   function buildShareContent(name, details) {
-    const activityUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
-      name
-    )}`;
+    const shareUrl = new URL(window.location.href);
+    shareUrl.searchParams.set("activity", name);
+    const activityUrl = shareUrl.toString();
     const shareText = `Check out ${name} at Mergington High School! ${details.description}`;
 
     return {
@@ -321,9 +321,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Create social sharing controls for an activity card
-  function createShareButtons(name, details) {
-    const { encodedText, encodedUrl, encodedWhatsappText, activityUrl } =
-      buildShareContent(name, details);
+  function createShareButtons(name, shareContent) {
+    const { encodedText, encodedUrl, encodedWhatsappText } = shareContent;
     const supportsNativeShare = typeof navigator.share === "function";
 
     return `
@@ -337,8 +336,6 @@ document.addEventListener("DOMContentLoaded", () => {
               type="button"
               class="share-button share-native-button"
               aria-label="Share ${name}"
-              data-share-text="${encodedText}"
-              data-share-url="${activityUrl}"
             >
               📤 Share
             </button>
@@ -376,7 +373,6 @@ document.addEventListener("DOMContentLoaded", () => {
             type="button"
             class="share-button share-copy-button"
             aria-label="Copy share link for ${name}"
-            data-share-url="${activityUrl}"
           >
             Copy Link
           </button>
@@ -597,6 +593,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareContent = buildShareContent(name, details);
 
     // Create activity tag
     const tagHtml = `
@@ -651,7 +648,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
-      ${createShareButtons(name, details)}
+      ${createShareButtons(name, shareContent)}
       <div class="activity-card-actions">
         ${
           currentUser
@@ -691,14 +688,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const nativeShareButton = activityCard.querySelector(".share-native-button");
     if (nativeShareButton) {
       nativeShareButton.addEventListener("click", async () => {
-        const shareText = decodeURIComponent(nativeShareButton.dataset.shareText);
-        const shareUrl = nativeShareButton.dataset.shareUrl;
-
         try {
           await navigator.share({
             title: `${name} - Mergington High School`,
-            text: shareText,
-            url: shareUrl,
+            text: shareContent.shareText,
+            url: shareContent.activityUrl,
           });
         } catch (error) {
           if (error.name !== "AbortError") {
@@ -712,8 +706,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (copyShareButton) {
       copyShareButton.addEventListener("click", async () => {
         try {
-          const shareUrl = copyShareButton.dataset.shareUrl;
-          await copyToClipboard(shareUrl);
+          await copyToClipboard(shareContent.activityUrl);
           showMessage("Share link copied to clipboard.", "success");
         } catch (error) {
           console.error("Error copying share link:", error);
