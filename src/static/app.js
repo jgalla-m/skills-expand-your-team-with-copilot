@@ -306,7 +306,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Build social sharing metadata for an activity
   function buildShareContent(name, details) {
-    const shareUrl = new URL(window.location.href);
+    const shareUrl = new URL(
+      `${window.location.origin}${window.location.pathname}`,
+    );
     shareUrl.searchParams.set("activity", name);
     const activityUrl = shareUrl.toString();
     const description =
