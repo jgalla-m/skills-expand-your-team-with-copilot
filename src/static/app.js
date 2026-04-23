@@ -304,6 +304,111 @@ document.addEventListener("DOMContentLoaded", () => {
     return details.schedule;
   }
 
+  // Build social sharing metadata for an activity
+  function buildShareContent(name, details) {
+    const activityUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
+      name
+    )}`;
+    const shareText = `Check out ${name} at Mergington High School! ${details.description}`;
+
+    return {
+      shareText,
+      activityUrl,
+      encodedText: encodeURIComponent(shareText),
+      encodedUrl: encodeURIComponent(activityUrl),
+      encodedWhatsappText: encodeURIComponent(`${shareText} ${activityUrl}`),
+    };
+  }
+
+  // Create social sharing controls for an activity card
+  function createShareButtons(name, details) {
+    const {
+      encodedText,
+      encodedUrl,
+      encodedWhatsappText,
+      activityUrl,
+      shareText,
+    } = buildShareContent(name, details);
+    const supportsNativeShare = typeof navigator.share === "function";
+
+    return `
+      <div class="share-actions">
+        <span class="share-label">Share with friends:</span>
+        <div class="share-buttons">
+          ${
+            supportsNativeShare
+              ? `
+            <button
+              type="button"
+              class="share-button share-native-button"
+              aria-label="Share ${name}"
+              data-share-text="${encodedText}"
+              data-share-url="${encodedUrl}"
+            >
+              📤 Share
+            </button>
+          `
+              : ""
+          }
+          <a
+            class="share-button share-whatsapp"
+            href="https://wa.me/?text=${encodedWhatsappText}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on WhatsApp"
+          >
+            WhatsApp
+          </a>
+          <a
+            class="share-button share-x"
+            href="https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on X"
+          >
+            X
+          </a>
+          <a
+            class="share-button share-facebook"
+            href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on Facebook"
+          >
+            Facebook
+          </a>
+          <button
+            type="button"
+            class="share-button share-copy-button"
+            aria-label="Copy share link for ${name}"
+            data-share-url="${encodedUrl}"
+            data-share-text="${encodedText}"
+          >
+            Copy Link
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Copy text to clipboard with fallback for unsupported environments
+  async function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "absolute";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+  }
+
   // Function to determine activity type (this would ideally come from backend)
   function getActivityType(activityName, description) {
     const name = activityName.toLowerCase();
@@ -552,6 +657,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      ${createShareButtons(name, details)}
       <div class="activity-card-actions">
         ${
           currentUser
@@ -585,6 +691,41 @@ document.addEventListener("DOMContentLoaded", () => {
           openRegistrationModal(name);
         });
       }
+    }
+
+    // Add share handlers
+    const nativeShareButton = activityCard.querySelector(".share-native-button");
+    if (nativeShareButton) {
+      nativeShareButton.addEventListener("click", async () => {
+        const shareText = decodeURIComponent(nativeShareButton.dataset.shareText);
+        const shareUrl = decodeURIComponent(nativeShareButton.dataset.shareUrl);
+
+        try {
+          await navigator.share({
+            title: `${name} - Mergington High School`,
+            text: shareText,
+            url: shareUrl,
+          });
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            showMessage("Unable to open share menu. Try another share option.", "error");
+          }
+        }
+      });
+    }
+
+    const copyShareButton = activityCard.querySelector(".share-copy-button");
+    if (copyShareButton) {
+      copyShareButton.addEventListener("click", async () => {
+        try {
+          const shareUrl = decodeURIComponent(copyShareButton.dataset.shareUrl);
+          await copyToClipboard(shareUrl);
+          showMessage("Share link copied to clipboard.", "success");
+        } catch (error) {
+          console.error("Error copying share link:", error);
+          showMessage("Couldn't copy link. Please copy from your browser.", "error");
+        }
+      });
     }
 
     activitiesList.appendChild(activityCard);
