@@ -222,6 +222,7 @@ section h3 {
   font-size: 0.72rem;
   text-decoration: none;
   line-height: 1.2;
+  cursor: pointer;
 }
 
 .share-button:hover {
