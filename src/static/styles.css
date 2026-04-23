@@ -229,6 +229,10 @@ section h3 {
   background-color: var(--border-light);
 }
 
+.share-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
 .share-native-button {
   background-color: var(--primary);
   color: var(--primary-text);
